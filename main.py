@@ -22,21 +22,26 @@ app.add_middleware(
 # ----------------------------------------------------
 # 🔥 Inicializar Firebase (Railway usa variable de entorno)
 # ----------------------------------------------------
+
 firebase_json = os.getenv("FIREBASE_CREDENTIALS")
 
 if firebase_json:
-    # 🔥 Railway → cargar JSON desde variable de entorno
-    firebase_dict = json.loads(firebase_json)
-    cred = credentials.Certificate(firebase_dict)
+    print("🔑 Cargando credenciales desde variable de entorno FIREBASE_CREDENTIALS...")  # añadido para debug
+    try:
+        firebase_dict = json.loads(firebase_json)
+        cred = credentials.Certificate(firebase_dict)
+    except json.JSONDecodeError as e:
+        raise Exception(f"❌ Error al decodificar JSON de FIREBASE_CREDENTIALS: {e}")
 else:
-    # 🔥 Local → usar archivo (solo si existe físicamente)
     if os.path.exists("serviceAccountKey.json"):
+        print("📂 Cargando credenciales desde archivo local serviceAccountKey.json...")  # añadido para debug
         cred = credentials.Certificate("serviceAccountKey.json")
     else:
         raise Exception("❌ No se encontró FIREBASE_CREDENTIALS ni serviceAccountKey.json")
 
 if not firebase_admin._apps:
     initialize_app(cred)
+    print("✅ Firebase inicializado correctamente")  # añadido para debug
 
 db = firestore.client()
 
