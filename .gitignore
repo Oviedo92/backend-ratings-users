@@ -1,0 +1,14 @@
+# Ignorar credenciales privadas
+serviceAccountKey.json
+
+# Virtual environments
+venv/
+.env/
+
+# Pycache
+__pycache__/
+*.pyc
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db

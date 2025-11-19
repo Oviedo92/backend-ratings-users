@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+firebase-admin
+google-cloud-firestore
+pydantic
+python-dotenv
