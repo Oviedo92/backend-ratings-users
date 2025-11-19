@@ -13,10 +13,10 @@ app = FastAPI()
 # ----------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],      # Permite todos los dominios (Android, iOS, Web, etc.)
+    allow_origins=["*"],      
     allow_credentials=True,
-    allow_methods=["*"],      # Permite todos los métodos HTTP
-    allow_headers=["*"],      # Permite cualquier header
+    allow_methods=["*"],      
+    allow_headers=["*"],      
 )
 
 # ----------------------------------------------------
@@ -25,11 +25,15 @@ app.add_middleware(
 firebase_json = os.getenv("FIREBASE_CREDENTIALS")
 
 if firebase_json:
+    # 🔥 Railway → cargar JSON desde variable de entorno
     firebase_dict = json.loads(firebase_json)
     cred = credentials.Certificate(firebase_dict)
 else:
-    # Si estás en local y sí tienes el archivo JSON
-    cred = credentials.Certificate("serviceAccountKey.json")
+    # 🔥 Local → usar archivo (solo si existe físicamente)
+    if os.path.exists("serviceAccountKey.json"):
+        cred = credentials.Certificate("serviceAccountKey.json")
+    else:
+        raise Exception("❌ No se encontró FIREBASE_CREDENTIALS ni serviceAccountKey.json")
 
 if not firebase_admin._apps:
     initialize_app(cred)
@@ -41,7 +45,7 @@ db = firestore.client()
 # ----------------------------------------------------
 class RatingPayload(BaseModel):
     uid: str
-    ratings: dict  # Ejemplo {"1": 4, "2": 5}
+    ratings: dict
 
 
 # ----------------------------------------------------
@@ -51,7 +55,7 @@ class RatingPayload(BaseModel):
 async def submit_ratings(data: RatingPayload):
 
     uid = data.uid
-    ratings = data.ratings  # ejemplo {"1": 5, "2": 3}
+    ratings = data.ratings
 
     user_ref = db.collection("users").document(uid)
     user_doc = user_ref.get()
@@ -59,10 +63,8 @@ async def submit_ratings(data: RatingPayload):
     if not user_doc.exists:
         return {"error": "User not found"}
 
-    # IDs de las películas calificadas
     rated_movies = list(map(int, ratings.keys()))
 
-    # Catálogo ejemplo
     MOVIES = {
         1: {"title": "Avengers: Endgame", "genre": "Acción"},
         2: {"title": "Scary Movie", "genre": "Comedia"},
@@ -86,7 +88,6 @@ async def submit_ratings(data: RatingPayload):
                 "rating": rating_value
             })
 
-    # Guardar en Firestore
     user_ref.update({
         "hasRated": True,
         "ratedMovies": rated_movies,
